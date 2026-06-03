@@ -11,7 +11,7 @@ from mcp.server.fastmcp import FastMCP
 
 API_BASE = os.getenv("API_BASE_URL", "http://api:8000")
 
-mcp = FastMCP("knowledge-base")
+mcp = FastMCP("knowledge-base", host="0.0.0.0", port=3000)
 
 
 # ─── Books ────────────────────────────────────────────────────────────────────
@@ -74,4 +74,4 @@ async def list_books() -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="sse", host="0.0.0.0", port=3000)
+    mcp.run(transport="sse")
