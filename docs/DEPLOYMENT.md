@@ -66,7 +66,8 @@ Add to `C:\Users\zaid\AppData\Roaming\Claude\claude_desktop_config.json`:
 
 ```json
 "knowledge-base": {
-  "url": "http://192.168.178.40:9201/sse"
+  "command": "npx",
+  "args": ["mcp-remote", "http://192.168.178.40:9201/sse"]
 }
 ```
 
