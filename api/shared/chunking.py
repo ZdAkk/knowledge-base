@@ -45,20 +45,45 @@ def approx_word_count(text: str) -> int:
     return len(text.split())
 
 
+def split_oversized_paragraph(text: str, max_words: int) -> list[str]:
+    """
+    Hard-split a paragraph that exceeds max_words into word-count chunks.
+    Used as a safety net for unusually long paragraphs (e.g. poetry, legal text).
+    """
+    words = text.split()
+    parts = []
+    for i in range(0, len(words), max_words):
+        parts.append(" ".join(words[i:i + max_words]))
+    return parts
+
+
 def chunk_text(
     text: str,
     max_tokens: int = 450,
     overlap_tokens: int = 80,
+    # OpenAI text-embedding-3-large limit is 8192 tokens (~6000 words).
+    # Hard-split any paragraph exceeding this to prevent API errors.
+    hard_max_words: int = 5000,
 ) -> list[Chunk]:
     """
     Split text into overlapping chunks by paragraph windows.
     max_tokens and overlap_tokens are approximated as word counts.
+    Paragraphs exceeding hard_max_words are forcibly split first.
     """
     cleaned = clean_text(text)
-    paragraphs = split_paragraphs(cleaned)
+    raw_paragraphs = split_paragraphs(cleaned)
+
+    # Enforce hard limit on individual paragraphs
+    paragraphs = []
+    for p in raw_paragraphs:
+        if approx_word_count(p) > hard_max_words:
+            paragraphs.extend(split_oversized_paragraph(p, hard_max_words))
+        else:
+            paragraphs.append(p)
 
     if not paragraphs:
         return []
+
 
     chunks: list[Chunk] = []
     chunk_index = 0
