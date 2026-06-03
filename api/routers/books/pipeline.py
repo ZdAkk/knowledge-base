@@ -165,29 +165,30 @@ async def ingest_epub(
 
     # ── Upsert chunks (text only, no embeddings yet)
     BATCH = 200
-    for i in range(0, len(all_chunk_records), BATCH):
-        batch = all_chunk_records[i:i + BATCH]
-        await conn.executemany("""
-            INSERT INTO books.chunks (
-                chunk_id, book_slug,
-                chapter_order, chapter_id, chapter_title,
-                chunk_index, chunk_strategy,
-                approx_tokens, max_tokens, overlap_tokens,
-                start_paragraph, end_paragraph_exclusive,
-                text_sha256, text
-            ) VALUES (
-                %(chunk_id)s, %(book_slug)s,
-                %(chapter_order)s, %(chapter_id)s, %(chapter_title)s,
-                %(chunk_index)s, %(chunk_strategy)s,
-                %(approx_tokens)s, %(max_tokens)s, %(overlap_tokens)s,
-                %(start_paragraph)s, %(end_paragraph_exclusive)s,
-                %(text_sha256)s, %(text)s
-            )
-            ON CONFLICT (chunk_id) DO UPDATE SET
-                text = EXCLUDED.text,
-                text_sha256 = EXCLUDED.text_sha256,
-                chapter_title = EXCLUDED.chapter_title
-        """, batch)
+    async with conn.cursor() as cur:
+        for i in range(0, len(all_chunk_records), BATCH):
+            batch = all_chunk_records[i:i + BATCH]
+            await cur.executemany("""
+                INSERT INTO books.chunks (
+                    chunk_id, book_slug,
+                    chapter_order, chapter_id, chapter_title,
+                    chunk_index, chunk_strategy,
+                    approx_tokens, max_tokens, overlap_tokens,
+                    start_paragraph, end_paragraph_exclusive,
+                    text_sha256, text
+                ) VALUES (
+                    %(chunk_id)s, %(book_slug)s,
+                    %(chapter_order)s, %(chapter_id)s, %(chapter_title)s,
+                    %(chunk_index)s, %(chunk_strategy)s,
+                    %(approx_tokens)s, %(max_tokens)s, %(overlap_tokens)s,
+                    %(start_paragraph)s, %(end_paragraph_exclusive)s,
+                    %(text_sha256)s, %(text)s
+                )
+                ON CONFLICT (chunk_id) DO UPDATE SET
+                    text = EXCLUDED.text,
+                    text_sha256 = EXCLUDED.text_sha256,
+                    chapter_title = EXCLUDED.chapter_title
+            """, batch)
 
     chunks_embedded = 0
 
