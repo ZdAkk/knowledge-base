@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "Knowledge Base API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://192.168.178.40:9200",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health",
+            "description": "Check that the API and database are reachable."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Ingest EPUB",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/books/ingest?embed=true&max_tokens=450&overlap_tokens=80",
+              "host": ["{{base_url}}"],
+              "path": ["books", "ingest"],
+              "query": [
+                {
+                  "key": "embed",
+                  "value": "true",
+                  "description": "Generate embeddings immediately (set false to skip and embed later)"
+                },
+                {
+                  "key": "max_tokens",
+                  "value": "450",
+                  "description": "Approximate words per chunk"
+                },
+                {
+                  "key": "overlap_tokens",
+                  "value": "80",
+                  "description": "Approximate word overlap between chunks"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "EPUB file to ingest"
+                }
+              ]
+            },
+            "description": "Upload an EPUB and ingest it. Extracts chapters, chunks text, stores in Postgres, and generates OpenAI embeddings."
+          }
+        },
+        {
+          "name": "List Books",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/books/list",
+            "description": "List all ingested books with total chunk count and how many have embeddings."
+          }
+        },
+        {
+          "name": "Search Books",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/books/search?q=your search query&limit=5&threshold=0.3",
+              "host": ["{{base_url}}"],
+              "path": ["books", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "your search query",
+                  "description": "Natural language search query"
+                },
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "description": "Maximum number of results"
+                },
+                {
+                  "key": "threshold",
+                  "value": "0.3",
+                  "description": "Minimum similarity score 0–1 (lower = more results)"
+                }
+              ]
+            },
+            "description": "Semantic search across all ingested books. Returns matching passages with title, chapter, and similarity score."
+          }
+        },
+        {
+          "name": "Embed Book",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/books/:book_slug/embed",
+            "description": "Generate or re-generate embeddings for all unembedded chunks of a specific book.",
+            "variable": [
+              {
+                "key": "book_slug",
+                "value": "atomic-habits",
+                "description": "The book's slug (e.g. atomic-habits)"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
