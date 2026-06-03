@@ -66,21 +66,8 @@ Add to `C:\Users\zaid\AppData\Roaming\Claude\claude_desktop_config.json`:
 
 ```json
 "knowledge-base": {
-  "command": "docker",
-  "args": [
-    "run", "--rm", "-i",
-    "-e", "API_BASE_URL",
-    "knowledge-base-mcp"
-  ],
-  "env": {
-    "API_BASE_URL": "http://192.168.178.40:8000"
-  }
+  "url": "http://192.168.178.40:9201/sse"
 }
-```
-
-Build the MCP image first:
-```bash
-docker compose build mcp
 ```
 
 ---
