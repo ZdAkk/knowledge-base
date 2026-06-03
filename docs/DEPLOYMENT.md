@@ -66,12 +66,22 @@ Add to `C:\Users\zaid\AppData\Roaming\Claude\claude_desktop_config.json`:
 
 ```json
 "knowledge-base": {
-  "type": "sse",
-  "url": "http://192.168.178.40:3000/sse"
+  "command": "docker",
+  "args": [
+    "run", "--rm", "-i",
+    "-e", "API_BASE_URL",
+    "knowledge-base-mcp"
+  ],
+  "env": {
+    "API_BASE_URL": "http://192.168.178.40:8000"
+  }
 }
 ```
 
-No local Docker needed — Claude connects directly to the running MCP server over SSE.
+Build the MCP image first:
+```bash
+docker compose build mcp
+```
 
 ---
 
