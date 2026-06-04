@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db import get_pool, close_pool
 from routers.books.router import router as books_router
+from routers.dreams.router import router as dreams_router
 
 
 @asynccontextmanager
@@ -31,6 +32,7 @@ app.add_middleware(
 
 # ── Routers — add new collections here
 app.include_router(books_router)
+app.include_router(dreams_router)
 
 
 @app.get("/health")

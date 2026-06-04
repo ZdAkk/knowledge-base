@@ -8,6 +8,11 @@
       "key": "base_url",
       "value": "http://192.168.178.40:9200",
       "type": "string"
+    },
+    {
+      "key": "dream_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -36,31 +41,15 @@
               "host": ["{{base_url}}"],
               "path": ["books", "ingest"],
               "query": [
-                {
-                  "key": "embed",
-                  "value": "true",
-                  "description": "Generate embeddings immediately (set false to skip and embed later)"
-                },
-                {
-                  "key": "max_tokens",
-                  "value": "450",
-                  "description": "Approximate words per chunk"
-                },
-                {
-                  "key": "overlap_tokens",
-                  "value": "80",
-                  "description": "Approximate word overlap between chunks"
-                }
+                { "key": "embed", "value": "true" },
+                { "key": "max_tokens", "value": "450" },
+                { "key": "overlap_tokens", "value": "80" }
               ]
             },
             "body": {
               "mode": "formdata",
               "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "description": "EPUB file to ingest"
-                }
+                { "key": "file", "type": "file", "description": "EPUB file to ingest" }
               ]
             },
             "description": "Upload an EPUB and ingest it. Extracts chapters, chunks text, stores in Postgres, and generates OpenAI embeddings."
@@ -71,7 +60,7 @@
           "request": {
             "method": "GET",
             "url": "{{base_url}}/books/list",
-            "description": "List all ingested books with total chunk count and how many have embeddings."
+            "description": "List all ingested books with chunk and embedding counts."
           }
         },
         {
@@ -83,24 +72,12 @@
               "host": ["{{base_url}}"],
               "path": ["books", "search"],
               "query": [
-                {
-                  "key": "q",
-                  "value": "your search query",
-                  "description": "Natural language search query"
-                },
-                {
-                  "key": "limit",
-                  "value": "5",
-                  "description": "Maximum number of results"
-                },
-                {
-                  "key": "threshold",
-                  "value": "0.3",
-                  "description": "Minimum similarity score 0–1 (lower = more results)"
-                }
+                { "key": "q", "value": "your search query" },
+                { "key": "limit", "value": "5" },
+                { "key": "threshold", "value": "0.3" }
               ]
             },
-            "description": "Semantic search across all ingested books. Returns matching passages with title, chapter, and similarity score."
+            "description": "Semantic search across all ingested books."
           }
         },
         {
@@ -108,14 +85,103 @@
           "request": {
             "method": "POST",
             "url": "{{base_url}}/books/:book_slug/embed",
-            "description": "Generate or re-generate embeddings for all unembedded chunks of a specific book.",
-            "variable": [
-              {
-                "key": "book_slug",
-                "value": "atomic-habits",
-                "description": "The book's slug (e.g. atomic-habits)"
-              }
-            ]
+            "description": "Re-embed a specific book.",
+            "variable": [{ "key": "book_slug", "value": "atomic-habits" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dreams",
+      "item": [
+        {
+          "name": "Ingest Dream",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/dreams/ingest",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dreamed_on\": \"2026-05-29\",\n  \"raw_text\": \"Your raw dream text here...\",\n  \"cleaned_text\": \"Optional cleaned version...\",\n  \"title\": \"Optional AI-generated title\",\n  \"emotional_tone\": [\"fear\", \"accomplishment\"],\n  \"lucid\": false,\n  \"recurring\": false,\n  \"notes\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Store a dream. Raw text is required. Cleaned text, title, and tone are optional — provided by the Trigger.dev pipeline after AI processing."
+          }
+        },
+        {
+          "name": "Add Interpretation",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/dreams/{{dream_id}}/interpretation",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"central_theme\": \"The Ego Confronting the Shadow\",\n  \"jungian_analysis\": \"Full analysis text...\",\n  \"waking_life\": \"Connection to current life circumstances...\",\n  \"message\": \"The psyche's core message...\",\n  \"symbols\": [\n    {\n      \"name\": \"The Heavyset Man\",\n      \"archetype\": \"The Shadow\",\n      \"description\": \"Arrogant figure who dismisses faith\",\n      \"significance\": \"Internalized critic, reductive materialist voice\",\n      \"jungian_concept\": \"Shadow\"\n    }\n  ],\n  \"books_used\": [\"man-and-his-symbols\", \"memories-dreams-reflections\"],\n  \"web_sources\": [\"https://example.com\"],\n  \"scholar_sources\": null,\n  \"model_used\": \"deepseek/deepseek-r1\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Store the full Jungian interpretation for a dream. Called by Trigger.dev after AI synthesis. Automatically chunks and embeds all text."
+          }
+        },
+        {
+          "name": "List Dreams",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dreams/list?limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["dreams", "list"],
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" },
+                { "key": "from_date", "value": "", "disabled": true },
+                { "key": "to_date", "value": "", "disabled": true }
+              ]
+            },
+            "description": "List all dreams, newest first. Optionally filter by date range."
+          }
+        },
+        {
+          "name": "Get Dream",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/dreams/{{dream_id}}",
+            "description": "Full dream record including symbols and interpretation."
+          }
+        },
+        {
+          "name": "Delete Dream",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/dreams/{{dream_id}}",
+            "description": "Delete a dream and all associated symbols, interpretations, and chunks."
+          }
+        },
+        {
+          "name": "Search Dreams",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/dreams/search?q=shadow confrontation&limit=5&threshold=0.3",
+              "host": ["{{base_url}}"],
+              "path": ["dreams", "search"],
+              "query": [
+                { "key": "q", "value": "shadow confrontation" },
+                { "key": "limit", "value": "5" },
+                { "key": "threshold", "value": "0.3" },
+                { "key": "source_type", "value": "jungian_analysis", "disabled": true },
+                { "key": "from_date", "value": "", "disabled": true },
+                { "key": "to_date", "value": "", "disabled": true }
+              ]
+            },
+            "description": "Semantic search across dream chunks. Filter by source_type: cleaned_dream, jungian_analysis, waking_life, symbol."
+          }
+        },
+        {
+          "name": "List Archetypes",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/dreams/symbols",
+            "description": "All archetypes across all dreams with occurrence count. Useful for spotting recurring patterns."
           }
         }
       ]
