@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     db_user: str = "postgres"
     db_password: str = ""
 
+    api_secret_key: str = ""
+
     openai_api_key: str = ""
     embedding_model: str = "text-embedding-3-large"
     embedding_dims: int = 3072

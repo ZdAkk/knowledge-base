@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import get_pool, close_pool
+from auth import require_auth
 from routers.books.router import router as books_router
 from routers.dreams.router import router as dreams_router
 
@@ -30,9 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Routers — add new collections here
-app.include_router(books_router)
-app.include_router(dreams_router)
+# ── Routers — add new collections here (all protected by bearer token)
+app.include_router(books_router, dependencies=[Depends(require_auth)])
+app.include_router(dreams_router, dependencies=[Depends(require_auth)])
 
 
 @app.get("/health")
