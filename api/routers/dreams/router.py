@@ -141,7 +141,7 @@ async def get_dream(
     """Full dream record including symbols and interpretation."""
     row = await conn.execute("""
         SELECT dream_id, dreamed_on, title, raw_text, cleaned_text,
-               emotional_tone, lucid, recurring, notes, recorded_at
+               emotional_tone, lucid, recurring, notes, day_residue, recorded_at
         FROM dreams.dreams WHERE dream_id = %s
     """, (dream_id,))
     dream = await row.fetchone()
@@ -181,7 +181,8 @@ async def get_dream(
     return DreamDetail(
         dream_id=dream[0], dreamed_on=dream[1], title=dream[2],
         raw_text=dream[3], cleaned_text=dream[4], emotional_tone=dream[5],
-        lucid=dream[6], recurring=dream[7], notes=dream[8], recorded_at=dream[9],
+        lucid=dream[6], recurring=dream[7], notes=dream[8],
+        day_residue=dream[9], recorded_at=dream[10],
         symbols=symbols, interpretation=interpretation,
     )
 
