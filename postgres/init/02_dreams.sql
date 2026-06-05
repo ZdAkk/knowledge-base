@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS dreams.dreams (
     emotional_tone  text[],                     -- e.g. {fear, accomplishment, confusion}
     lucid           boolean     DEFAULT false,
     recurring       boolean     DEFAULT false,  -- Marked true if pattern seen before
-    notes           text                        -- Any freeform notes you want to attach
+    notes           text,                       -- Any freeform notes you want to attach
+    day_residue     text                        -- Previous day context that may have seeded the dream
 );
 
 -- ── Symbols and archetypes ────────────────────────────────────────────────────

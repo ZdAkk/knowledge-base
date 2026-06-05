@@ -39,12 +39,12 @@ async def ingest_dream(
         INSERT INTO dreams.dreams (
             dream_id, dreamed_on, recorded_at,
             title, raw_text, cleaned_text,
-            emotional_tone, lucid, recurring, notes
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            emotional_tone, lucid, recurring, notes, day_residue
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """, (
         dream_id, req.dreamed_on, recorded_at,
         req.title, req.raw_text, req.cleaned_text,
-        req.emotional_tone, req.lucid, req.recurring, req.notes,
+        req.emotional_tone, req.lucid, req.recurring, req.notes, req.day_residue,
     ))
 
     await conn.commit()

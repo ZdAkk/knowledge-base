@@ -13,6 +13,7 @@ class DreamIngestRequest(BaseModel):
     lucid: bool = False
     recurring: bool = False
     notes: str | None = None
+    day_residue: str | None = None
 
 
 class DreamIngestResponse(BaseModel):
@@ -95,6 +96,7 @@ class DreamDetail(BaseModel):
     lucid: bool
     recurring: bool
     notes: str | None
+    day_residue: str | None
     recorded_at: datetime
     symbols: list[SymbolOut] = []
     interpretation: InterpretationOut | None = None
