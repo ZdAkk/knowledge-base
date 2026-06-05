@@ -74,3 +74,22 @@ export interface BookSummary {
   embedded_chunks: number;
   extracted_at: string;
 }
+
+export interface BookChapter {
+  chapter_title: string | null;
+  chapter_order: number;
+  chunk_count: number;
+}
+
+export interface BookDetail {
+  book_slug: string;
+  title: string | null;
+  author: string | null;
+  language: string | null;
+  publisher: string | null;
+  isbn: string | null;
+  extracted_at: string | null;
+  total_chunks: number;
+  embedded_chunks: number;
+  chapters: BookChapter[];
+}

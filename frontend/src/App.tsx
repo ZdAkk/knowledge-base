@@ -4,6 +4,7 @@ import { Shell } from "@/components/layout/Shell";
 import { DreamsPage } from "@/pages/DreamsPage";
 import { DreamDetailPage } from "@/pages/DreamDetailPage";
 import { BooksPage } from "@/pages/BooksPage";
+import { BookDetailPage } from "@/pages/BookDetailPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="dreams" element={<DreamsPage />} />
             <Route path="dreams/:dreamId" element={<DreamDetailPage />} />
             <Route path="books" element={<BooksPage />} />
+            <Route path="books/:slug" element={<BookDetailPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

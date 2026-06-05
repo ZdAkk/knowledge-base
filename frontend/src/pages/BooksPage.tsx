@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { booksApi } from "@/api/books";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,28 +37,30 @@ export function BooksPage() {
       {books && books.length > 0 && (
         <div className="space-y-2.5">
           {books.map((book) => (
-            <Card key={book.book_slug}>
-              <CardContent className="p-4 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {book.title}
-                  </p>
-                  {book.author && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {book.author}
+            <Link key={book.book_slug} to={`/books/${book.book_slug}`}>
+              <Card className="hover:border-border/80 hover:bg-card/80 transition-all duration-150 cursor-pointer group">
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                      {book.title}
                     </p>
-                  )}
-                </div>
-                <Badge
-                  variant={book.embedded_chunks === book.total_chunks ? "emerald" : "amber"}
-                  className="shrink-0"
-                >
-                  {book.embedded_chunks === book.total_chunks
-                    ? `${book.total_chunks} chunks`
-                    : `${book.embedded_chunks}/${book.total_chunks}`}
-                </Badge>
-              </CardContent>
-            </Card>
+                    {book.author && (
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {book.author}
+                      </p>
+                    )}
+                  </div>
+                  <Badge
+                    variant={book.embedded_chunks === book.total_chunks ? "emerald" : "amber"}
+                    className="shrink-0"
+                  >
+                    {book.embedded_chunks === book.total_chunks
+                      ? `${book.total_chunks} chunks`
+                      : `${book.embedded_chunks}/${book.total_chunks}`}
+                  </Badge>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

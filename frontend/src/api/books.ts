@@ -1,8 +1,10 @@
 import { api } from "./client";
-import type { BookSummary } from "@/types";
+import type { BookSummary, BookDetail } from "@/types";
 
 export const booksApi = {
   list: () => api.get<BookSummary[]>("/books/list"),
+
+  get: (slug: string) => api.get<BookDetail>(`/books/${slug}`),
 
   search: (params: { q: string; limit?: number; threshold?: number }) => {
     const q = new URLSearchParams({ q: params.q });

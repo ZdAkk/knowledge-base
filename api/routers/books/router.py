@@ -9,7 +9,7 @@ from pgvector.psycopg import register_vector_async
 
 from db import get_pool
 from shared.embeddings import embed
-from .models import IngestResponse, BookSummary, SearchResult, SearchResponse
+from .models import IngestResponse, BookSummary, BookDetail, BookChapter, SearchResult, SearchResponse
 from .pipeline import ingest_epub, embed_book_chunks
 
 router = APIRouter(prefix="/books", tags=["books"])
@@ -55,6 +55,42 @@ async def ingest(
     return IngestResponse(
         **result,
         message="Ingestion complete" if embed else "Text ingested — run embed to generate vectors",
+    )
+
+
+@router.get("/{book_slug}", response_model=BookDetail)
+async def get_book(book_slug: str, conn: psycopg.AsyncConnection = Depends(get_conn)):
+    """Full book record with metadata and chapter list."""
+    row = await conn.execute("""
+        SELECT b.book_slug, b.title, b.author, b.language, b.publisher, b.isbn, b.extracted_at,
+               COUNT(c.chunk_id)::int AS total_chunks,
+               COUNT(c.embedding)::int AS embedded_chunks
+        FROM books.books b
+        LEFT JOIN books.chunks c ON b.book_slug = c.book_slug
+        WHERE b.book_slug = %s
+        GROUP BY b.book_slug, b.title, b.author, b.language, b.publisher, b.isbn, b.extracted_at
+    """, (book_slug,))
+    book = await row.fetchone()
+    if not book:
+        raise HTTPException(status_code=404, detail=f"Book '{book_slug}' not found")
+
+    chapters_rows = await conn.execute("""
+        SELECT chapter_title, chapter_order, COUNT(*)::int AS chunk_count
+        FROM books.chunks
+        WHERE book_slug = %s
+        GROUP BY chapter_title, chapter_order
+        ORDER BY chapter_order
+    """, (book_slug,))
+    chapters = [
+        BookChapter(chapter_title=r[0], chapter_order=r[1], chunk_count=r[2])
+        for r in await chapters_rows.fetchall()
+    ]
+
+    return BookDetail(
+        book_slug=book[0], title=book[1], author=book[2],
+        language=book[3], publisher=book[4], isbn=book[5],
+        extracted_at=book[6], total_chunks=book[7], embedded_chunks=book[8],
+        chapters=chapters,
     )
 
 
