@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 224 28% 7%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 28% 10%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 28% 10%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 38 92% 55%;
+    --primary-foreground: 224 28% 7%;
+
+    --secondary: 224 28% 15%;
+    --secondary-foreground: 213 31% 91%;
+
+    --muted: 224 28% 14%;
+    --muted-foreground: 215 16% 55%;
+
+    --accent: 38 92% 55%;
+    --accent-foreground: 224 28% 7%;
+
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 213 31% 91%;
+
+    --border: 224 28% 17%;
+    --input: 224 28% 17%;
+    --ring: 38 92% 55%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+}
+
+/* Prose-like styling for dream narrative and interpretation text */
+.dream-prose {
+  @apply text-foreground/90 leading-relaxed;
+  font-family: Georgia, Cambria, serif;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.dream-prose p {
+  @apply mb-4;
+}

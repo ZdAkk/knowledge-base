@@ -35,3 +35,14 @@ services:
     env_file: .env
     depends_on:
       - api
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${BIND_HOST}:${FRONTEND_PORT}:80"
+    environment:
+      API_BASE_URL: http://api:8000
+      API_TOKEN: ${API_SECRET_KEY}
+    depends_on:
+      - api
