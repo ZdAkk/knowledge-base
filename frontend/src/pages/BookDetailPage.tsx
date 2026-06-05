@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, Hash } from "lucide-react";
+import { ArrowLeft, BookOpen, Hash, ChevronDown, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { booksApi } from "@/api/books";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTime } from "@/lib/utils";
+import type { BookChapter } from "@/types";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -37,6 +39,69 @@ function Loader() {
     </div>
   );
 }
+
+function ChapterRow({ chapter, bookSlug }: { chapter: BookChapter; bookSlug: string }) {
+  const [open, setOpen] = useState(false);
+
+  const { data: chunks, isLoading } = useQuery({
+    queryKey: ["book-chunks", bookSlug, chapter.chapter_order],
+    queryFn: () => booksApi.chunks(bookSlug, chapter.chapter_order),
+    enabled: open,
+  });
+
+  return (
+    <div className="rounded-md border border-border/50 overflow-hidden">
+      {/* Chapter header — clickable */}
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-muted/20 hover:bg-muted/40 transition-colors text-left"
+      >
+        <p className="text-sm text-foreground/80 truncate pr-4">
+          {chapter.chapter_title || `Section ${chapter.chapter_order + 1}`}
+        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Hash className="w-3 h-3" />
+            {chapter.chunk_count}
+          </span>
+          {open ? (
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronRightIcon className="w-3.5 h-3.5 text-muted-foreground" />
+          )}
+        </div>
+      </button>
+
+      {/* Chunks list */}
+      {open && (
+        <div className="border-t border-border/50 divide-y divide-border/30">
+          {isLoading && (
+            <div className="p-3 space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-3 w-full" />
+              ))}
+            </div>
+          )}
+          {chunks?.map((chunk) => (
+            <Link
+              key={chunk.chunk_id}
+              to={`/books/${bookSlug}/chunks/${chunk.chunk_id}`}
+              className="flex items-start gap-3 px-4 py-3 hover:bg-muted/20 transition-colors group"
+            >
+              <span className="text-xs text-muted-foreground/50 font-mono mt-0.5 shrink-0 w-6">
+                {chunk.chunk_index + 1}
+              </span>
+              <p className="text-xs text-muted-foreground group-hover:text-foreground/80 transition-colors line-clamp-2 leading-relaxed">
+                {chunk.text.slice(0, 180)}…
+              </p>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export function BookDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -138,18 +203,7 @@ export function BookDetailPage() {
               </SectionLabel>
               <div className="space-y-1.5">
                 {book.chapters.map((ch) => (
-                  <div
-                    key={ch.chapter_order}
-                    className="flex items-center justify-between px-4 py-2.5 rounded-md bg-muted/20 border border-border/50"
-                  >
-                    <p className="text-sm text-foreground/80 truncate pr-4">
-                      {ch.chapter_title || `Section ${ch.chapter_order + 1}`}
-                    </p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                      <Hash className="w-3 h-3" />
-                      {ch.chunk_count}
-                    </div>
-                  </div>
+                  <ChapterRow key={ch.chapter_order} chapter={ch} bookSlug={book.book_slug} />
                 ))}
               </div>
             </section>

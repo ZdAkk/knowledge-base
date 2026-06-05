@@ -1,8 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { Moon, BookOpen, Sparkles } from "lucide-react";
+import { Moon, BookOpen, Sparkles, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { to: "/search", label: "Search", icon: Search },
   { to: "/dreams", label: "Dreams", icon: Moon },
   { to: "/books", label: "Books", icon: BookOpen },
 ];

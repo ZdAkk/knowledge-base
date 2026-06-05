@@ -13,7 +13,7 @@ from .models import (
     InterpretationRequest, InterpretationResponse,
     DreamSummary, DreamDetail, SymbolOut, InterpretationOut,
     DreamSearchResponse, DreamSearchResult,
-    ArchetypeSummary,
+    ArchetypeSummary, DreamChunkDetail,
 )
 from .pipeline import ingest_dream, store_interpretation
 
@@ -298,3 +298,44 @@ async def list_archetypes(
         ArchetypeSummary(archetype=r[0], count=r[1], dream_ids=r[2])
         for r in await rows.fetchall()
     ]
+
+
+# ── Chunks ─────────────────────────────────────────────────────────────────────
+
+@router.get("/{dream_id}/chunks/{chunk_id}", response_model=DreamChunkDetail)
+async def get_dream_chunk(
+    dream_id: str,
+    chunk_id: str,
+    conn: psycopg.AsyncConnection = Depends(get_conn),
+):
+    """Single dream chunk with prev/next navigation within the same source_type."""
+    row = await conn.execute("""
+        SELECT c.chunk_id, c.chunk_index, c.dream_id, d.title, d.dreamed_on,
+               c.source_type, c.text
+        FROM dreams.chunks c
+        JOIN dreams.dreams d ON d.dream_id = c.dream_id
+        WHERE c.chunk_id = %s AND c.dream_id = %s
+    """, (chunk_id, dream_id))
+    chunk = await row.fetchone()
+    if not chunk:
+        raise HTTPException(status_code=404, detail=f"Chunk '{chunk_id}' not found")
+
+    prev_row = await conn.execute("""
+        SELECT chunk_id FROM dreams.chunks
+        WHERE dream_id = %s AND source_type = %s AND chunk_index = %s
+    """, (dream_id, chunk[5], chunk[1] - 1))
+    prev_chunk = await prev_row.fetchone()
+
+    next_row = await conn.execute("""
+        SELECT chunk_id FROM dreams.chunks
+        WHERE dream_id = %s AND source_type = %s AND chunk_index = %s
+    """, (dream_id, chunk[5], chunk[1] + 1))
+    next_chunk = await next_row.fetchone()
+
+    return DreamChunkDetail(
+        chunk_id=chunk[0], chunk_index=chunk[1], dream_id=chunk[2],
+        dream_title=chunk[3], dreamed_on=chunk[4], source_type=chunk[5],
+        text=chunk[6],
+        prev_chunk_id=prev_chunk[0] if prev_chunk else None,
+        next_chunk_id=next_chunk[0] if next_chunk else None,
+    )

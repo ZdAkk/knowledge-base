@@ -81,6 +81,56 @@ export interface BookChapter {
   chunk_count: number;
 }
 
+export interface BookChunkItem {
+  chunk_id: string;
+  chunk_index: number;
+  chapter_title: string | null;
+  chapter_order: number;
+  approx_tokens: number;
+  text: string;
+}
+
+export interface BookChunkDetail {
+  chunk_id: string;
+  chunk_index: number;
+  book_slug: string;
+  book_title: string | null;
+  book_author: string | null;
+  chapter_title: string | null;
+  chapter_order: number;
+  approx_tokens: number;
+  text: string;
+  prev_chunk_id: string | null;
+  next_chunk_id: string | null;
+}
+
+export interface DreamChunkDetail {
+  chunk_id: string;
+  chunk_index: number;
+  dream_id: string;
+  dream_title: string | null;
+  dreamed_on: string;
+  source_type: string;
+  text: string;
+  prev_chunk_id: string | null;
+  next_chunk_id: string | null;
+}
+
+export interface UnifiedSearchResult {
+  chunk_id: string;
+  source_type: "book" | "dream";
+  source_id: string;
+  title: string | null;
+  context: string | null;
+  text: string;
+  similarity: number;
+}
+
+export interface UnifiedSearchResponse {
+  query: string;
+  results: UnifiedSearchResult[];
+}
+
 export interface BookDetail {
   book_slug: string;
   title: string | null;

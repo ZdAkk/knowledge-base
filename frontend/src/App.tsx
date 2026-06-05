@@ -5,6 +5,9 @@ import { DreamsPage } from "@/pages/DreamsPage";
 import { DreamDetailPage } from "@/pages/DreamDetailPage";
 import { BooksPage } from "@/pages/BooksPage";
 import { BookDetailPage } from "@/pages/BookDetailPage";
+import { BookChunkPage } from "@/pages/BookChunkPage";
+import { DreamChunkPage } from "@/pages/DreamChunkPage";
+import { SearchPage } from "@/pages/SearchPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,8 +27,11 @@ export default function App() {
             <Route index element={<Navigate to="/dreams" replace />} />
             <Route path="dreams" element={<DreamsPage />} />
             <Route path="dreams/:dreamId" element={<DreamDetailPage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="books" element={<BooksPage />} />
             <Route path="books/:slug" element={<BookDetailPage />} />
+            <Route path="books/:slug/chunks/:chunkId" element={<BookChunkPage />} />
+            <Route path="dreams/:dreamId/chunks/:chunkId" element={<DreamChunkPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

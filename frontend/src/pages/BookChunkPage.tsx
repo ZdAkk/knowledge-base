@@ -1,0 +1,113 @@
+import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { booksApi } from "@/api/books";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function Loader() {
+  return (
+    <div className="max-w-2xl mx-auto px-6 py-10 space-y-6">
+      <Skeleton className="h-3 w-64" />
+      <Skeleton className="h-6 w-48" />
+      <Separator />
+      <div className="space-y-2">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-4 w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function BookChunkPage() {
+  const { slug, chunkId } = useParams<{ slug: string; chunkId: string }>();
+
+  const { data: chunk, isLoading, error } = useQuery({
+    queryKey: ["book-chunk", slug, chunkId],
+    queryFn: () => booksApi.chunk(slug!, chunkId!),
+    enabled: !!slug && !!chunkId,
+  });
+
+  return (
+    <div>
+      {/* Top bar */}
+      <div className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-sm px-6 py-3">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={`/books/${slug}`} className="flex items-center gap-1.5 text-muted-foreground">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to book
+          </Link>
+        </Button>
+      </div>
+
+      {isLoading && <Loader />}
+
+      {error && (
+        <div className="max-w-2xl mx-auto px-6 py-10">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            Failed to load chunk.
+          </div>
+        </div>
+      )}
+
+      {chunk && (
+        <article className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+          {/* Breadcrumb */}
+          <Breadcrumb
+            items={[
+              { label: "Books", href: "/books" },
+              { label: chunk.book_title ?? chunk.book_slug, href: `/books/${chunk.book_slug}` },
+              { label: chunk.chapter_title ?? `Section ${chunk.chapter_order + 1}`, href: `/books/${chunk.book_slug}` },
+              { label: `Chunk #${chunk.chunk_index + 1}` },
+            ]}
+          />
+
+          {/* Meta */}
+          <div>
+            <p className="text-xs text-muted-foreground font-mono">
+              {chunk.approx_tokens} words · chunk {chunk.chunk_index + 1}
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Text */}
+          <div className="dream-prose">
+            {chunk.text.split("\n\n").map((para, i) => (
+              <p key={i}>{para.trim()}</p>
+            ))}
+          </div>
+
+          <Separator />
+
+          {/* Prev / Next navigation */}
+          <div className="flex items-center justify-between">
+            {chunk.prev_chunk_id ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/books/${chunk.book_slug}/chunks/${chunk.prev_chunk_id}`}>
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  Previous chunk
+                </Link>
+              </Button>
+            ) : (
+              <div />
+            )}
+            {chunk.next_chunk_id ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/books/${chunk.book_slug}/chunks/${chunk.next_chunk_id}`}>
+                  Next chunk
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </Button>
+            ) : (
+              <div />
+            )}
+          </div>
+        </article>
+      )}
+    </div>
+  );
+}

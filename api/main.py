@@ -6,6 +6,7 @@ from db import get_pool, close_pool
 from auth import require_auth
 from routers.books.router import router as books_router
 from routers.dreams.router import router as dreams_router
+from routers.search.router import router as search_router
 
 
 @asynccontextmanager
@@ -34,6 +35,7 @@ app.add_middleware(
 # ── Routers — add new collections here (all protected by bearer token)
 app.include_router(books_router, dependencies=[Depends(require_auth)])
 app.include_router(dreams_router, dependencies=[Depends(require_auth)])
+app.include_router(search_router, dependencies=[Depends(require_auth)])
 
 
 @app.get("/health")

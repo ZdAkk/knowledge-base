@@ -9,7 +9,7 @@ from pgvector.psycopg import register_vector_async
 
 from db import get_pool
 from shared.embeddings import embed
-from .models import IngestResponse, BookSummary, BookDetail, BookChapter, SearchResult, SearchResponse
+from .models import IngestResponse, BookSummary, BookDetail, BookChapter, BookChunkItem, BookChunkDetail, SearchResult, SearchResponse
 from .pipeline import ingest_epub, embed_book_chunks
 
 router = APIRouter(prefix="/books", tags=["books"])
@@ -153,4 +153,77 @@ async def get_book(book_slug: str, conn: psycopg.AsyncConnection = Depends(get_c
         language=book[3], publisher=book[4], isbn=book[5],
         extracted_at=book[6], total_chunks=book[7], embedded_chunks=book[8],
         chapters=chapters,
+    )
+
+
+@router.get("/{book_slug}/chunks", response_model=list[BookChunkItem])
+async def list_book_chunks(
+    book_slug: str,
+    chapter_order: int | None = Query(None),
+    limit: int = Query(100, le=500),
+    offset: int = Query(0),
+    conn: psycopg.AsyncConnection = Depends(get_conn),
+):
+    """List chunks for a book, optionally filtered by chapter_order."""
+    filters = ["book_slug = %s"]
+    params: list = [book_slug]
+    if chapter_order is not None:
+        filters.append("chapter_order = %s")
+        params.append(chapter_order)
+    params += [limit, offset]
+
+    rows = await conn.execute(f"""
+        SELECT chunk_id, chunk_index, chapter_title, chapter_order, approx_tokens, text
+        FROM books.chunks
+        WHERE {" AND ".join(filters)}
+        ORDER BY chunk_index
+        LIMIT %s OFFSET %s
+    """, params)
+
+    return [
+        BookChunkItem(
+            chunk_id=r[0], chunk_index=r[1], chapter_title=r[2],
+            chapter_order=r[3], approx_tokens=r[4], text=r[5],
+        )
+        for r in await rows.fetchall()
+    ]
+
+
+@router.get("/{book_slug}/chunks/{chunk_id}", response_model=BookChunkDetail)
+async def get_book_chunk(
+    book_slug: str,
+    chunk_id: str,
+    conn: psycopg.AsyncConnection = Depends(get_conn),
+):
+    """Single chunk with prev/next navigation."""
+    row = await conn.execute("""
+        SELECT c.chunk_id, c.chunk_index, c.book_slug, b.title, b.author,
+               c.chapter_title, c.chapter_order, c.approx_tokens, c.text
+        FROM books.chunks c
+        JOIN books.books b ON b.book_slug = c.book_slug
+        WHERE c.chunk_id = %s AND c.book_slug = %s
+    """, (chunk_id, book_slug))
+    chunk = await row.fetchone()
+    if not chunk:
+        raise HTTPException(status_code=404, detail=f"Chunk '{chunk_id}' not found")
+
+    # Prev / next within same chapter
+    prev_row = await conn.execute("""
+        SELECT chunk_id FROM books.chunks
+        WHERE book_slug = %s AND chapter_order = %s AND chunk_index = %s
+    """, (book_slug, chunk[6], chunk[1] - 1))
+    prev_chunk = await prev_row.fetchone()
+
+    next_row = await conn.execute("""
+        SELECT chunk_id FROM books.chunks
+        WHERE book_slug = %s AND chapter_order = %s AND chunk_index = %s
+    """, (book_slug, chunk[6], chunk[1] + 1))
+    next_chunk = await next_row.fetchone()
+
+    return BookChunkDetail(
+        chunk_id=chunk[0], chunk_index=chunk[1], book_slug=chunk[2],
+        book_title=chunk[3], book_author=chunk[4], chapter_title=chunk[5],
+        chapter_order=chunk[6], approx_tokens=chunk[7], text=chunk[8],
+        prev_chunk_id=prev_chunk[0] if prev_chunk else None,
+        next_chunk_id=next_chunk[0] if next_chunk else None,
     )

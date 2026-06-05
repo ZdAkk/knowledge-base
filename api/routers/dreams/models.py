@@ -119,6 +119,20 @@ class DreamSearchResponse(BaseModel):
     results: list[DreamSearchResult]
 
 
+# ── Chunks ────────────────────────────────────────────────────────────────────
+
+class DreamChunkDetail(BaseModel):
+    chunk_id: str
+    chunk_index: int
+    dream_id: str
+    dream_title: str | None
+    dreamed_on: date
+    source_type: str
+    text: str
+    prev_chunk_id: str | None
+    next_chunk_id: str | None
+
+
 # ── Symbols ────────────────────────────────────────────────────────────────────
 
 class ArchetypeSummary(BaseModel):

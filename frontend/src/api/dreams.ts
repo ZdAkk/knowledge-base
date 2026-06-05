@@ -3,6 +3,7 @@ import type {
   DreamSummary,
   DreamDetail,
   DreamSearchResult,
+  DreamChunkDetail,
   ArchetypeSummary,
 } from "@/types";
 
@@ -34,6 +35,9 @@ export const dreamsApi = {
   },
 
   archetypes: () => api.get<ArchetypeSummary[]>("/dreams/symbols"),
+
+  chunk: (dreamId: string, chunkId: string) =>
+    api.get<DreamChunkDetail>(`/dreams/${dreamId}/chunks/${chunkId}`),
 
   delete: (dreamId: string) => api.delete<{ dream_id: string; message: string }>(`/dreams/${dreamId}`),
 };

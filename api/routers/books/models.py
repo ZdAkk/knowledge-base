@@ -39,6 +39,29 @@ class BookDetail(BaseModel):
     chapters: list[BookChapter]
 
 
+class BookChunkItem(BaseModel):
+    chunk_id: str
+    chunk_index: int
+    chapter_title: str | None
+    chapter_order: int
+    approx_tokens: int
+    text: str
+
+
+class BookChunkDetail(BaseModel):
+    chunk_id: str
+    chunk_index: int
+    book_slug: str
+    book_title: str | None
+    book_author: str | None
+    chapter_title: str | None
+    chapter_order: int
+    approx_tokens: int
+    text: str
+    prev_chunk_id: str | None
+    next_chunk_id: str | None
+
+
 class SearchResult(BaseModel):
     chunk_id: str
     book_slug: str
